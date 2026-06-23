@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+<title>2K26 Panel</title>
+
+<!-- CDN Libraries -->
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12.54/lib/index.css">
+<script src="https://cdn.jsdelivr.net/npm/vant@2.12.54/lib/vant.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/element-ui@2.15.14/lib/theme-chalk/index.css">
+<script src="https://cdn.jsdelivr.net/npm/element-ui@2.15.14/lib/index.js"></script>
+
+<!-- Local Data Files -->
+<script src="./jquery.min.js"></script>
+<script src="./itemConfig.js"></script>
+<script src="./data.js"></script>
+<script src="./teams.js"></script>
+<script src="./qiuxie.js"></script>
+<script src="./translation.js"></script>
+
+<style>
+[v-cloak] { display: none !important; }
+* { padding: 0; margin: 0; box-sizing: border-box; }
+*:not(input,textarea) { -webkit-user-select: none; user-select: none; }
+
+body, html {
+  height: 100%; width: 100%; overflow: hidden;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: #1a1a2e;
+}
+
+/* ---- LOGIN ---- */
+.login-overlay {
+  position: fixed; inset: 0; display: flex;
+  align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  z-index: 9999;
+}
+.login-box {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(168,255,120,0.3);
+  border-radius: 20px; padding: 36px 30px;
+  width: 320px; text-align: center;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.login-logo { font-size: 26px; font-weight: 900; color: #a8ff78; letter-spacing: 3px; margin-bottom: 6px; }
+.login-sub { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 24px; }
+.login-field {
+  position: relative; margin-bottom: 16px;
+}
+.login-field i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #a8ff78; }
+.login-field input {
+  width: 100%; padding: 13px 20px 13px 46px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(168,255,120,0.25);
+  border-radius: 50px; color: #fff; font-size: 14px; outline: none;
+}
+.login-field input:focus { border-color: #a8ff78; }
+.login-btn {
+  width: 100%; padding: 13px;
+  background: linear-gradient(90deg, #333399, #a8ff78);
+  border: none; border-radius: 50px;
+  color: white; font-size: 14px; font-weight: 700;
+  cursor: pointer; letter-spacing: 1px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 6px 20px rgba(51,51,153,0.4);
+}
+.login-btn:hover { transform: translateY(-2px); }
+.login-err { color: #ff7675; font-size: 12px; margin-top: 12px; min-height: 18px; }
+
+/* ---- CONTAINER ---- */
+.panel {
+  display: flex;
+  width: 710px; height: 545px;
+  position: absolute;
+  top: calc(50% - 272px);
+  left: calc(50% - 355px);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+/* ---- SIDEBAR ---- */
+.sidebar {
+  flex: 0 0 142px;
+  background: linear-gradient(180deg, #1a1a2e 0%, #0f3460 100%);
+  display: flex; flex-direction: column;
+  padding: 0;
+  position: relative;
+}
+.sidebar-logo {
+  padding: 14px 10px 10px;
+  text-align: center;
+  font-size: 14px; font-weight: 900;
+  color: #a8ff78; letter-spacing: 2px;
+  cursor: move;
+  text-shadow: 0 0 12px rgba(168,255,120,0.5);
+  border-bottom: 1px solid rgba(168,255,120,0.2);
+  margin-bottom: 8px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; margin: 2px 8px;
+  border-radius: 7px; cursor: pointer;
+  font-size: 11.5px; font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+.nav-item i { font-size: 12px; width: 14px; text-align: center; }
+.nav-item:hover { background: rgba(168,255,120,0.08); color: #fff; }
+.nav-item.active {
+  background: rgba(168,255,120,0.13);
+  border-color: rgba(168,255,120,0.35);
+  color: #a8ff78; font-weight: 700;
+}
+.sidebar-ver {
+  position: absolute; bottom: 10px; left: 0; right: 0;
+  text-align: center; font-size: 9px; color: rgba(255,255,255,0.2);
+}
+
+/* ---- MAIN ---- */
+.main {
+  flex: 1; background: #f4f6f9;
+  overflow-y: auto; padding: 12px;
+}
+.section { display: none; }
+.section.on { display: block; }
+
+/* ---- BANNER ---- */
+.banner-wrap {
+  height: 110px; border-radius: 8px; overflow: hidden;
+  margin-bottom: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+}
+.banner {
+  width: 100%; height: 100%; display: block;
+  background: linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.55)),
+    url('https://pic1.imgdb.cn/item/68f4746e3203f7be007d30a5.png') center/cover;
+  position: relative;
+}
+.banner::after {
+  content: 'NBA 2K26'; position: absolute; right: 14px; bottom: 10px;
+  font-size: 22px; font-weight: 900; color: #fff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+.banner::before {
+  content: 'GAME INACTIVE'; position: absolute; right: 8px; top: 8px;
+  background: rgba(220,50,50,0.5); color: #fff; font-size: 9px;
+  font-weight: 800; padding: 3px 8px; border-radius: 4px;
+}
+.banner.on::before { content: 'GAME RUNNING'; background: rgba(0,200,0,0.55); animation: pulse 1s infinite alternate; }
+@keyframes pulse { from { opacity: 0.7; } to { opacity: 1; } }
+
+/* ---- CARD / ACCORDION ---- */
+.card {
+  background: #fff; border-radius: 8px;
+  margin-bottom: 8px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+  overflow: hidden;
+}
+.card-head {
+  padding: 9px 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11.5px; font-weight: 700; color: #1a1a2e;
+  background: linear-gradient(90deg,#f0f4ff,#fff);
+  border-bottom: 1px solid #e8ecf0;
+  user-select: none;
+}
+.card-head .arrow { margin-left: auto; font-size: 10px; color: #333399; transition: transform 0.2s; }
+.card-head.open .arrow { transform: rotate(90deg); }
+.card-body { padding: 10px 12px; display: none; }
+.card-body.open { display: block; }
+
+/* ---- FIELD LABEL ---- */
+.lbl {
+  display: block; font-size: 10px; font-weight: 700;
+  color: #333399; text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 4px; margin-top: 8px;
+}
+.lbl:first-child { margin-top: 2px; }
+
+/* ---- DROPDOWN ROW ---- */
+.drow { display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+.drow .el-select { flex: 1; }
+
+/* ---- EL-SELECT OVERRIDES ---- */
+.el-input__inner {
+  border: 1px solid #d0d9ee !important;
+  height: 28px !important; line-height: 28px !important;
+  font-size: 11px !important; border-radius: 6px !important;
+}
+.el-input__inner:focus { border-color: #333399 !important; }
+.el-select-dropdown__item { font-size: 11px; padding: 0 12px; height: 30px; line-height: 30px; }
+.el-select-dropdown__item.selected { color: #333399; font-weight: 700; }
+.el-input__suffix, .el-input__icon { line-height: 28px; }
+
+/* ---- BUTTONS ---- */
+.abtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 28px; padding: 0 11px; border-radius: 6px;
+  font-size: 10.5px; font-weight: 700; cursor: pointer;
+  border: none; color: #fff; transition: all 0.15s; white-space: nowrap;
+  flex-shrink: 0;
+}
+.abtn:active { transform: translateY(1px); opacity: 0.85; }
+.abtn-p  { background: linear-gradient(135deg,#a8ff78,#333399); }
+.abtn-d  { background: linear-gradient(135deg,#ff6b6b,#ee0979); }
+.abtn-i  { background: linear-gradient(135deg,#4facfe,#00f2fe); color: #111; }
+.abtn-w  { background: linear-gradient(135deg,#f7971e,#ffd200); color: #111; }
+.abtn-n  { background: linear-gradient(135deg,#667eea,#764ba2); }
+.brow { display: flex; gap: 6px; margin-top: 8px; }
+.brow .abtn { flex: 1; }
+
+/* ---- FACE ---- */
+.face-row {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #f8faff; padding: 7px 10px; border-radius: 6px;
+  margin-bottom: 5px; border: 1px solid #eef2ff;
+}
+.face-row span { font-size: 11px; font-weight: 600; color: #333; }
+.face-ctrl { display: flex; gap: 5px; align-items: center; }
+.face-inp {
+  width: 54px; height: 26px; border: 1px solid #d0d9ee;
+  border-radius: 5px; text-align: center; font-size: 11px;
+  font-weight: 700; color: #333399; outline: none;
+  -webkit-user-select: text; user-select: text;
+}
+.face-inp:focus { border-color: #333399; }
+
+/* ---- TOGGLE ---- */
+.trow {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #f8faff; padding: 9px 12px; border-radius: 6px;
+  margin-bottom: 6px; border: 1px solid #eef2ff;
+}
+.tlabel { font-size: 11px; font-weight: 700; color: #1a1a2e; }
+.tsub { font-size: 9px; color: #999; margin-top: 1px; }
+
+/* ---- SLIDER ---- */
+.swrap {
+  background: #f8faff; padding: 10px 12px; border-radius: 6px;
+  margin-bottom: 6px; border: 1px solid #eef2ff;
+}
+.stitle { font-size: 11px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
+.el-slider__button { border-color: #333399; }
+.el-slider__bar { background: linear-gradient(90deg,#a8ff78,#333399); }
+
+/* ---- TEXTAREA ---- */
+textarea {
+  width: 100%; height: 80px; background: #fff; color: #222;
+  border: 1px solid #d0d9ee; border-radius: 6px;
+  padding: 7px; font-size: 10.5px; resize: none; outline: none;
+  -webkit-user-select: text; user-select: text;
+}
+textarea:focus { border-color: #333399; }
+
+/* ---- SHOE STATUS ---- */
+.shoe-status {
+  margin-top: 8px; background: #f8faff; padding: 7px 10px;
+  border-radius: 6px; font-size: 10px; color: #555;
+  border: 1px solid #eef2ff; line-height: 1.8;
+}
+
+/* scrollbar */
+.main::-webkit-scrollbar { width: 4px; }
+.main::-webkit-scrollbar-track { background: #f0f4ff; }
+.main::-webkit-scrollbar-thumb { background: #c5cfe8; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div id="app" v-cloak>
+
+  <!-- LOGIN SCREEN -->
+  <div class="login-overlay" v-if="!unlocked">
+    <div class="login-box">
+      <div class="login-logo">2K26</div>
+      <div class="login-sub">NBA 2K26 Panel — Enter Access Code</div>
+      <div class="login-field">
+        <i class="fas fa-key"></i>
+        <input type="password" v-model="pass" placeholder="Enter code..." @keyup.enter="login"/>
+      </div>
+      <button class="login-btn" @click="login">UNLOCK PANEL</button>
+      <div class="login-err">{{ err }}</div>
+    </div>
+  </div>
+
+  <!-- MAIN PANEL -->
+  <div class="panel" v-if="unlocked">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-logo" @touchstart="ts" @touchmove="tm">2K26 PANEL</div>
+      <div v-for="s in nav" :key="s.id" class="nav-item" :class="{ active: tab === s.id }" @click="tab = s.id">
+        <i :class="s.icon"></i> {{ s.name }}
+      </div>
+      <div class="sidebar-ver">EN v2.0</div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="main">
+
+      <!-- ===== ARENA ===== -->
+      <div class="section" :class="{ on: tab==='arena' }">
+        <div class="banner-wrap"><div class="banner" :class="{ on: gameOn }"></div></div>
+
+        <div class="card">
+          <div class="card-head" :class="{ open: open.arena1 }" @click="toggle('arena1')">
+            <i class="fas fa-map-marked-alt" style="color:#333399"></i> Arena Customizer
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="card-body" :class="{ open: open.arena1 }">
+            <span class="lbl">Target Team</span>
+            <div class="drow">
+              <el-select v-model="sel.team" placeholder="Select Team" filterable size="mini">
+                <el-option v-for="t in teams" :key="t.id" :label="t.name" :value="t.id"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x5E6F220','I32',+sel.team,'Team Arena')">Apply</button>
+            </div>
+            <span class="lbl">Retro Presets</span>
+            <div class="brow">
+              <button class="abtn abtn-p" @click="wr('0x5E6F220','I32',6,'Mavs Retro')">Mavs Retro</button>
+              <button class="abtn abtn-p" @click="wr('0x5E6F220','I32',11,'Rockets Retro')">Rockets Retro</button>
+              <button class="abtn abtn-p" @click="wr('0x5E6F220','I32',7,'Nets Retro')">Nets Retro</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" :class="{ open: open.arena2 }" @click="toggle('arena2')">
+            <i class="fas fa-video" style="color:#333399"></i> Camera Angle
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="card-body" :class="{ open: open.arena2 }">
+            <div class="drow">
+              <el-select v-model="sel.cam" placeholder="Select Camera" size="mini">
+                <el-option v-for="c in cams" :key="c.v" :label="c.n" :value="c.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x5E6F224','I32',sel.cam,'Camera')">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== FACE ===== -->
+      <div class="section" :class="{ on: tab==='face' }">
+        <div class="card">
+          <div class="card-head open"><i class="fas fa-drafting-compass" style="color:#333399"></i> Facial Dimensions</div>
+          <div class="card-body open">
+            <div v-for="a in face" :key="a.idx" class="face-row">
+              <span>{{ a.label }}</span>
+              <div class="face-ctrl">
+                <input class="face-inp" type="number" min="0" max="99" v-model.number="a.val"/>
+                <button class="abtn abtn-p" @click="applyFace(a)">Set</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GEAR ===== -->
+      <div class="section" :class="{ on: tab==='gear' }">
+        <div class="card">
+          <div class="card-head open"><i class="fas fa-socks" style="color:#333399"></i> Arm / Leg Accessories</div>
+          <div class="card-body open">
+            <div class="drow">
+              <el-select v-model="sel.acc" placeholder="Select Accessory" size="mini" clearable>
+                <el-option v-for="a in accOpts" :key="a.v" :label="a.n" :value="a.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="applyAcc">Apply</button>
+            </div>
+            <div class="brow">
+              <button class="abtn abtn-n" @click="wr('0x15A42D4','I32',-1,'Remove Tights')">Remove Tights</button>
+              <button class="abtn abtn-d" @click="remAcc">Remove Accessory</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" :class="{ open: open.gear2 }" @click="toggle('gear2')">
+            <i class="fas fa-hat-cowboy" style="color:#333399"></i> Special Items &amp; Headwear
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="card-body" :class="{ open: open.gear2 }">
+            <span class="lbl">Category</span>
+            <div class="drow" style="margin-bottom:6px">
+              <el-select v-model="sel.gcat" placeholder="Category" size="mini" @change="sel.gitem=null">
+                <el-option v-for="c in gearCats" :key="c.k" :label="c.n" :value="c.k"></el-option>
+              </el-select>
+            </div>
+            <span class="lbl">Item</span>
+            <div class="drow">
+              <el-select v-model="sel.gitem" placeholder="Select Item" size="mini" filterable>
+                <el-option v-for="it in curGear" :key="it.val" :label="it.txt" :value="it.val"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="equipGear">Equip</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ANIMATIONS ===== -->
+      <div class="section" :class="{ on: tab==='anim' }">
+        <div class="card">
+          <div class="card-head open"><i class="fas fa-basketball-ball" style="color:#333399"></i> Shot &amp; Jump Form</div>
+          <div class="card-body open">
+            <span class="lbl">Shot Release 1</span>
+            <div class="drow">
+              <el-select v-model="sel.r1" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.r1" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B8FD','I32',+sel.r1,'Release 1')">Apply</button>
+            </div>
+            <span class="lbl">Shot Release 2</span>
+            <div class="drow">
+              <el-select v-model="sel.r2" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.r2" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B901','I32',+sel.r2,'Release 2')">Apply</button>
+            </div>
+            <span class="lbl">Stepback Jumper</span>
+            <div class="drow">
+              <el-select v-model="sel.step" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.step" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B905','I32',+sel.step,'Stepback')">Apply</button>
+            </div>
+            <span class="lbl">Escape Move (Off-Ball)</span>
+            <div class="drow">
+              <el-select v-model="sel.esc" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.esc" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B909','I32',+sel.esc,'Escape')">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" :class="{ open: open.anim2 }" @click="toggle('anim2')">
+            <i class="fas fa-running" style="color:#333399"></i> Dribble Packages
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="card-body" :class="{ open: open.anim2 }">
+            <span class="lbl">Signature Dribble</span>
+            <div class="drow">
+              <el-select v-model="sel.drib" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.drib" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B90D','I32',+sel.drib,'Dribble')">Apply</button>
+            </div>
+            <span class="lbl">Size-Up Package</span>
+            <div class="drow">
+              <el-select v-model="sel.sizeup" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.sizeup" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B911','I32',+sel.sizeup,'SizeUp')">Apply</button>
+            </div>
+            <span class="lbl">Combo Moves</span>
+            <div class="drow">
+              <el-select v-model="sel.combo" placeholder="Select Style" size="mini" filterable>
+                <el-option v-for="o in anim.combo" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2B915','I32',+sel.combo,'Combo')">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head" :class="{ open: open.anim3 }" @click="toggle('anim3')">
+            <i class="fas fa-child" style="color:#333399"></i> Dunks &amp; Celebrations
+            <span class="arrow">&#9654;</span>
+          </div>
+          <div class="card-body" :class="{ open: open.anim3 }">
+            <span class="lbl">Dunk Package</span>
+            <div class="drow">
+              <el-select v-model="sel.dunk" placeholder="Select Dunk" size="mini" filterable>
+                <el-option v-for="o in anim.dunk" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2C02','I32',+sel.dunk,'Dunk Pkg')">Apply</button>
+            </div>
+            <span class="lbl">3pt Celebration</span>
+            <div class="drow">
+              <el-select v-model="sel.cel3" placeholder="Select" size="mini" filterable>
+                <el-option v-for="o in anim.cel3" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2C05','STR',sel.cel3,'3pt Cel')">Apply</button>
+            </div>
+            <span class="lbl">2pt Celebration</span>
+            <div class="drow">
+              <el-select v-model="sel.cel2" placeholder="Select" size="mini" filterable>
+                <el-option v-for="o in anim.cel2" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2C06','STR',sel.cel2,'2pt Cel')">Apply</button>
+            </div>
+            <span class="lbl">Dunk Celebration</span>
+            <div class="drow">
+              <el-select v-model="sel.celd" placeholder="Select" size="mini" filterable>
+                <el-option v-for="o in anim.celd" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2C08','STR',sel.celd,'Dunk Cel')">Apply</button>
+            </div>
+            <span class="lbl">Standing Taunt</span>
+            <div class="drow">
+              <el-select v-model="sel.taunt" placeholder="Select" size="mini" filterable>
+                <el-option v-for="o in anim.taunt" :key="o.v" :label="o.n" :value="o.v"></el-option>
+              </el-select>
+              <button class="abtn abtn-p" @click="wr('0x4A2C07','STR',sel.taunt,'Taunt')">Apply</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SNEAKERS ===== -->
+      <div class="section" :class="{ on: tab==='shoes' }">
+        <div class="card">
+          <div class="card-head open"><i class="fas fa-shoe-prints" style="color:#333399"></i> Sneaker Studio</div>
+          <div class="card-body open">
+            <span class="lbl">Brand</span>
+            <div class="drow" style="margin-bottom:6px">
+              <el-select v-model="sel.sbrand" placeholder="All Brands" size="mini" clearable @change="sel.smodel=null">
+                <el-option v-for="b in shoeBrands" :key="b.k" :label="b.n" :value="b.k"></el-option>
+              </el-select>
+            </div>
+            <span class="lbl">Model</span>
+            <div class="drow">
+              <el-select v-model="sel.smodel" placeholder="Select Shoe" size="mini" filterable>
+                <el-option v-for="s in shoeModels" :key="s.v" :label="s.n" :value="s.v"></el-option>
+              </el-select>
+            </div>
+            <div class="brow">
+              <button class="abtn abtn-p" @click="wearShoe('left')">Left Foot</button>
+              <button class="abtn abtn-i" @click="wearShoe('right')">Right Foot</button>
+              <button class="abtn abtn-n" @click="wearShoe('both')">Both Feet</button>
+            </div>
+            <div class="shoe-status" v-if="sel.lshoe || sel.rshoe">
+              <div v-if="sel.lshoe">👟 <b>Left:</b> {{ sel.lshoe }}</div>
+              <div v-if="sel.rshoe">👟 <b>Right:</b> {{ sel.rshoe }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CHEATS ===== -->
+      <div class="section" :class="{ on: tab==='cheats' }">
+        <div class="card">
+          <div class="card-head open"><i class="fas fa-bolt" style="color:#333399"></i> Cheat Mods</div>
+          <div class="card-body open">
+            <div class="trow">
+              <div>
+                <div class="tlabel">Infinite Stamina</div>
+                <div class="tsub">Player never fatigues</div>
+              </div>
+              <van-switch v-model="sel.stam" active-color="#a8ff78" inactive-color="#dfe6e9" size="22px" @change="togStam"></van-switch>
+            </div>
+            <div class="swrap">
+              <div class="stitle">Game Speed: <b style="color:#333399">{{ sel.spd.toFixed(1) }}x</b></div>
+              <el-slider v-model="sel.spd" :min="0.5" :max="2.5" :step="0.1" @change="setSpd"></el-slider>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== SHARE ===== -->
+      <div class="section" :class="{ on: tab==='share' }">
+        <div class="card">
+          <div class="card-head open"><i class="fas fa-share-alt" style="color:#333399"></i> Save &amp; Share Profile</div>
+          <div class="card-body open">
+            <span class="lbl">Encrypted Save Code</span>
+            <textarea v-model="sel.code" placeholder="Paste your 2K26 save code here..."></textarea>
+            <div class="brow" style="margin-top:8px">
+              <button class="abtn abtn-p" @click="exportP">Export Code</button>
+              <button class="abtn abtn-w" @click="importP">Import Code</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /panel -->
+</div><!-- /app -->
+
+<script>
+// Wait for all scripts to fully load before initializing Vue
+document.addEventListener('DOMContentLoaded', function() {
+
+  // ---- Safe data access ----
+  var IC   = (typeof itemConfig !== 'undefined' && itemConfig.items)  ? itemConfig.items  : {};
+  var D    = (typeof data      !== 'undefined' && data.itemList)      ? data.itemList      : {};
+  var T    = (typeof teams     !== 'undefined')                        ? teams              : [];
+  var Q    = (typeof qiuxie   !== 'undefined')                        ? qiuxie             : {};
+  var TR   = (typeof Translation !== 'undefined')                     ? Translation        : null;
+
+  function tx(s)  { return TR ? TR.translateText(s)     : s; }
+  function txT(s) { return TR ? TR.translateTeam(s)     : s; }
+
+  // ---- Strip header row from itemConfig arrays ----
+  function strip(arr) {
+    if (!arr || !arr.length) return [];
+    if (String(arr[0].value) === String(arr[0].text)) return arr.slice(1);
+    return arr;
+  }
+
+  // ---- Build animation option arrays ----
+  function ao(key) {
+    return strip(IC[key] || []).map(function(o){ return { n: o.text, v: String(o.value) }; });
+  }
+
+  var DUNK_EN = {
+    '无':'None','单脚起跳扣篮':'One-Foot Dunk','双脚起跳扣篮':'Two-Foot Dunk',
+    '基本单脚起跳单手扣篮':'Basic 1-Foot 1-Hand','基本单脚起跳双手扣篮':'Basic 1-Foot 2-Hand',
+    '基本双脚起跳单手扣篮':'Basic 2-Foot 1-Hand','基本双脚起跳双手扣篮':'Basic 2-Foot 2-Hand',
+    '单脚起跳挂框扣篮':'1-Foot Rim Hang','双脚起跳挂框扣篮':'2-Foot Rim Hang',
+    '大个单脚扣篮':'Big Man 1-Foot','大个挂框扣篮':'Big Man Rim Hang',
+    '单手篮下常规型':'Under Basket 1-Hand','双手篮下常规型':'Under Basket 2-Hand',
+    '职业篮下挂框':'Pro Under Hang','精英拉框':'Elite Bar Pull',
+    '大力单脚起跳扣篮':'Power 1-Foot','大力双脚起跳单手扣篮':'Power 2-Foot 1-Hand',
+    '单脚起跳快速扣篮':'Quick 1-Foot','双脚起跳快速扣篮':'Quick 2-Foot',
+    '公鸡式战斧扣篮':'Rooster Tomahawk','直劈战斧扣篮':'Straight Tomahawk',
+    '大力正面战斧扣篮':'Power Front Tomahawk',
+    '单脚起跳超级战斧扣篮':'Super Tomahawk 1-Foot','双脚起跳超级战斧扣篮':'Super Tomahawk 2-Foot',
+    '单手大风车扣篮':'1-Hand Windmill','倾斜大风车扣篮':'Lean Windmill',
+    '正面大风车扣篮':'Front Windmill','侧身大风车扣篮':'Side Windmill','大力风车扣篮':'Power Windmill',
+    '基础360度扣篮':'Basic 360 Dunk','大力360度转身扣篮':'Power 360 Dunk',
+    '花式双脚起跳扣篮':'Fancy 2-Foot','花式单脚起跳扣篮':'Fancy 1-Foot',
+    '双脚起跳腿下扣篮':'Between Legs 2-Foot','单脚起跳腿下扣篮':'Between Legs 1-Foot',
+    '解锁扣篮组合':'Unlock Package','主宰扣篮':'Dominant Dunk','侧身扣篮':'Side Dunk',
+    '正面抓球扣篮':'Front Catch Dunk'
+  };
+  var ZY2_EN = {
+    '无':'None','双手666':'Double 666','放箭':'Arrow Release','利拉德看表':'Dame Time',
+    '欧洲步':'Euro Step','展示肌肉':'Flex','三分压腕':'3pt Wrist','哈登撒盐':'Harden Salt',
+    '摇头':'Head Shake','拍头':'Head Tap','接电话':'Phone Call','鼓舞起来':'Hype Up',
+    '砍小臂':'Forearm Chop','好冷':'Ice Cold','强壮':'Strong','回头搓手指':'Finger Rub',
+    '霸王步':'Dominant Step','三分手势插兜':'3 In Pocket','摇飞机':'Airplane Dab',
+    '库里晚安':'Curry Night Night','三分手势张开':'3 Wide','骚姿势':'Swag Pose',
+    '嘘声':'Shhh','乔丹摊手':'Jordan Shrug','库里指天':'Curry Point Up',
+    '詹姆斯摊手':'LeBron Shrug','弯腰滑行':'Lean Glide','举手摇手指':'Finger Wag',
+    '威少摇篮':'Russ Cradle','鞠躬':'Bow'
+  };
+  var ZYZ_EN = {
+    '无':'None','抱胸':'Arms Crossed','鞠躬':'Bow','扭动':'Groove','打手':'Slap Hands',
+    '打头':'Head Slap','聆听':'Listening','起跑式':'Ready Stance','跳舞':'Dance',
+    '丈量':'Measure','摇手指':'Finger Wag','射箭':'Shoot Arrow','摊手':'Shrug',
+    '跪地丈量':'Kneel Measure','转圈摇摆':'Spin Sway','印度舞':'Bhangra',
+    '未知':'Unknown','单臂摇':'One-Arm Shake','禁声':'Silence'
+  };
+
+  var BRAND_EN = {
+    'DIY':'DIY Custom','Nike AIR系列':'Nike AIR','JORDAN系列':'Jordan',
+    'Adidas系列':'Adidas','Nike系列':'Nike','Under Armour系列':'Under Armour'
+  };
+
+  var GEAR_EN = {
+    '特殊物品':'Special Items','帽子':'Hats','发带':'Headbands','耳机':'Earphones',
+    '眼镜':'Glasses','背包':'Backpacks','护肘':'Elbow Pads','护臂':'Arm Sleeves',
+    '打底裤':'Tights','护膝':'Knee Pads','护腿':'Leg Sleeves','袜子':'Socks',
+    '内衫':'Undershirts','手表':'Watches','戒指':'Rings','护踝':'Ankle Braces',
+    '小腿护套':'Calf Sleeves','手链腕带':'Wristbands'
+  };
+
+  // Build data
+  var teamList = T.map(function(t){ return { id: t.id, name: txT(t.name) }; });
+
+  var gearCatList = Object.keys(D).map(function(k){
+    return { k: k, n: GEAR_EN[k] || k };
+  });
+  var firstGearCat = gearCatList.length > 0 ? gearCatList[0].k : null;
+
+  var brandList = Object.keys(Q).map(function(k){ return { k: k, n: BRAND_EN[k] || k }; });
+
+  var animData = {
+    r1:    ao('投篮出手1'),
+    r2:    ao('投篮出手2'),
+    step:  ao('后撤步'),
+    esc:   ao('摆脱动作'),
+    drib:  ao('招牌花式运球'),
+    sizeup:ao('分解动作'),
+    combo: ao('组合动作'),
+    dunk:  strip(IC['扣篮动作组合']||[]).map(function(o){ return { n:DUNK_EN[o.text]||o.text, v:String(o.value) }; }),
+    cel3:  strip(IC['zy3f']||[]).map(function(o){ return { n:o.text, v:String(o.value) }; }),
+    cel2:  strip(IC['zy2f']||[]).map(function(o){ return { n:ZY2_EN[o.text]||o.text, v:String(o.value) }; }),
+    taunt: strip(IC['zyzl']||[]).map(function(o){ return { n:ZYZ_EN[o.text]||o.text, v:String(o.value) }; }),
+    celd:  strip(IC['zyklbq']||[]).map(function(o){ return { n:o.text, v:String(o.value) }; })
+  };
+
+  // ---- H5GG drag helpers ----
+  var dx=0, dy=0;
+
+  // ---- Vue App ----
+  new Vue({
+    el: '#app',
+    data: {
+      pass:'', unlocked:false, err:'',
+      gameOn: false,
+      tab: 'arena',
+      nav: [
+        { id:'arena',  name:'Arena',      icon:'fas fa-basketball-ball' },
+        { id:'face',   name:'Face Shape', icon:'fas fa-user-circle'     },
+        { id:'gear',   name:'Gear',       icon:'fas fa-tshirt'          },
+        { id:'anim',   name:'Animations', icon:'fas fa-running'         },
+        { id:'shoes',  name:'Sneakers',   icon:'fas fa-shoe-prints'     },
+        { id:'cheats', name:'Cheats',     icon:'fas fa-bolt'            },
+        { id:'share',  name:'Share',      icon:'fas fa-share-alt'       },
+      ],
+      open: { arena1:true, arena2:false, gear2:false, anim2:false, anim3:false },
+      teams: teamList,
+      cams: [
+        {v:1,n:'1 – Broadcast Arena'},{v:4,n:'4 – Broadcast Low Angle'},
+        {v:5,n:'5 – 2K Default'},{v:9,n:'9 – High Up Close'},
+        {v:10,n:'10 – Low Up Close'},{v:12,n:'12 – Nosebleed'},
+        {v:18,n:'18 – Side View'},{v:23,n:'23 – Suite Cam'},{v:26,n:'26 – Behind Basket'},
+      ],
+      face: [
+        {idx:4,  label:'Skull Width',          val:50},
+        {idx:22, label:'Nose Vertical Pos',    val:50},
+        {idx:25, label:'Nose Width',           val:50},
+        {idx:30, label:'Nose Bridge Height',   val:50},
+        {idx:35, label:'Upper Lip Protrusion', val:50},
+        {idx:40, label:'Lower Lip Protrusion', val:50},
+        {idx:45, label:'Jaw Width',            val:50},
+        {idx:50, label:'Chin Depth',           val:50},
+        {idx:55, label:'Cheek Depth',          val:50},
+        {idx:60, label:'Eye Height',           val:50},
+      ],
+      accOpts: [
+        {v:4,   n:'Nike Left Arm Sleeve (Team Color)'},
+        {v:1,   n:'Nike Both Arms Sleeve (Team Color)'},
+        {v:107, n:'Knee Pads (Team Color 1)'},
+        {v:164, n:'Nike Right Arm (Team Color 2)'},
+        {v:99,  n:'Left Patella Band'},
+        {v:96,  n:'Left Padded Knee Sleeve'},
+        {v:167, n:'T-Mac Leg Sleeve'},
+        {v:144, n:'Remove Wristband'},
+        {v:10,  n:'Wristband Left'},
+        {v:11,  n:'Wristband Right'},
+        {v:12,  n:'Both Wristbands'},
+      ],
+      gearCats: gearCatList,
+      shoeBrands: brandList,
+      anim: animData,
+      sel: {
+        team:'15', cam:1,
+        acc:null, gcat:firstGearCat, gitem:null,
+        r1:null, r2:null, step:null, esc:null, drib:null, sizeup:null, combo:null,
+        dunk:null, cel3:null, cel2:null, celd:null, taunt:null,
+        sbrand:null, smodel:null, lshoe:null, rshoe:null,
+        stam:false, spd:1.0, code:''
+      }
+    },
+    computed: {
+      curGear: function() {
+        var items = D[this.sel.gcat] || [];
+        return items.map(function(it){ return { txt: tx(it.text), val: it.value }; });
+      },
+      shoeModels: function() {
+        var out = [];
+        if (this.sel.sbrand) {
+          var raw = Q[this.sel.sbrand] || [];
+          out = raw.map(function(s){ return { n: tx(s.label), v: s.value }; });
+        } else {
+          Object.keys(Q).forEach(function(b){
+            (Q[b]||[]).forEach(function(s){ out.push({ n:tx(s.label), v:s.value }); });
+          });
+        }
+        return out;
+      }
+    },
+    methods: {
+      login: function() {
+        if (this.pass.toLowerCase() === '2k26') {
+          this.unlocked = true;
+          vant.Toast.success('Unlocked!');
+        } else {
+          this.err = 'Wrong code! Hint: 2k26';
+          vant.Toast.fail('Wrong code');
+        }
+      },
+      toggle: function(k) { this.open[k] = !this.open[k]; },
+      ts: function(e) { dx=e.touches[0].clientX; dy=e.touches[0].clientY; },
+      tm: function(e) {
+        var nx=e.touches[0].screenX-dx, ny=e.touches[0].screenY-dy;
+        if(typeof setWindowRect!=='undefined') setWindowRect(nx,ny,710,545);
+      },
+      wr: function(addr, type, val, label) {
+        try { if(typeof h5gg!=='undefined'){ h5gg.setValue(addr,val,type); } }
+        catch(e){}
+        console.log('[2K26] '+label+': '+val+' @ '+addr);
+        vant.Toast.success(label+' applied');
+      },
+      applyFace: function(a) {
+        var n = parseInt(a.val);
+        if(isNaN(n)||n<0||n>99){ vant.Toast.fail('Value must be 0-99'); return; }
+        this.wr('0x12A4F'+a.idx.toString(16).toUpperCase(),'I32',n,a.label);
+      },
+      applyAcc: function() {
+        if(this.sel.acc===null){ vant.Toast.fail('Select an accessory'); return; }
+        this.wr('0x15A42D0','I32',this.sel.acc,'Accessory');
+      },
+      remAcc: function() {
+        this.sel.acc=null;
+        this.wr('0x15A42D0','I32',-1,'Remove Accessory');
+      },
+      equipGear: function() {
+        if(this.sel.gitem===null||this.sel.gitem===undefined){ vant.Toast.fail('Select an item'); return; }
+        this.wr('0x15A43E0','I32',this.sel.gitem,'Gear Item');
+      },
+      wearShoe: function(foot) {
+        if(!this.sel.smodel){ vant.Toast.fail('Select a shoe model'); return; }
+        var shoe = this.shoeModels.find(function(s){ return s.v==this.sel.smodel; },this);
+        var nm = shoe ? shoe.n : String(this.sel.smodel);
+        if(foot==='left'||foot==='both'){
+          this.sel.lshoe = nm;
+          this.wr('0x3C4D901','I32',this.sel.smodel,'Left Shoe: '+nm);
+        }
+        if(foot==='right'||foot==='both'){
+          this.sel.rshoe = nm;
+          this.wr('0x3C4D905','I32',this.sel.smodel,'Right Shoe: '+nm);
+        }
+      },
+      togStam: function() {
+        this.wr('0x5E6F704','I32',this.sel.stam?1:0,'Stamina '+(this.sel.stam?'ON':'OFF'));
+      },
+      setSpd: function() {
+        this.wr('0x5E6F700','F32',this.sel.spd,'Game Speed');
+      },
+      exportP: function() {
+        try {
+          var enc = CryptoJS.AES.encrypt(JSON.stringify(this.sel),'2k26-key').toString();
+          this.sel.code = '2K26-' + btoa(enc).substring(0,120);
+          vant.Toast.success('Exported — copy the code!');
+        } catch(e){ vant.Toast.fail('Export failed'); }
+      },
+      importP: function() {
+        try {
+          if(!this.sel.code.startsWith('2K26-')){ vant.Toast.fail('Invalid code'); return; }
+          var b = CryptoJS.AES.decrypt(atob(this.sel.code.substring(5)),'2k26-key');
+          var d = JSON.parse(b.toString(CryptoJS.enc.Utf8));
+          Object.assign(this.sel, d);
+          vant.Toast.success('Profile loaded!');
+        } catch(e){ vant.Toast.fail('Import failed'); }
+      }
+    }
+  });
+
+}); // end DOMContentLoaded
+</script>
+</body>
+</html>
