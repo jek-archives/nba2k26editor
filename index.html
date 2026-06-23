@@ -275,7 +275,7 @@ textarea:focus { border-color: #333399; }
 </head>
 <body>
 
-<div id="app" v-cloak>
+<div id="app" v-cloak style="display: none;">
 
   <!-- LOGIN SCREEN -->
   <div class="login-overlay" v-if="!unlocked">
@@ -847,6 +847,51 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+
+  // H5GG Setup
+  if (typeof setButtonImage !== 'undefined') {
+    // 1. Set floating button image
+    setButtonImage('https://ziyuan.eyashaa.cn/d/doubao/2/2KNG.png?sign=kaTDsm6esGeOSZf34ykGGisBXYUZKB7_j1cpG9RMlWc=:0');
+    
+    // 2. Disable default H5GG dragging
+    setWindowDrag(0, 0, 0, 0);
+
+    // 3. Keep layout full screen
+    var layout = function () {
+      if (window.lastorientation == window.orientation) return;
+      window.lastorientation = window.orientation;
+      if (Math.abs(window.orientation) == 90) {
+        setWindowRect(0, 0, window.screen.height, window.screen.width);
+      } else {
+        setWindowRect(0, 0, window.screen.width, window.screen.height);
+      }
+    };
+    layout();
+    window.addEventListener("orientationchange", layout, true);
+
+    // 4. Configure floating ball click
+    setButtonAction(function () {
+      var menu = document.querySelector("#app");
+      if (menu.style.display == "none") {
+        menu.style.display = "block";
+        setWindowTouch(true); // Capture touches
+      } else {
+        menu.style.display = "none";
+        setWindowTouch(false); // Let touches pass through
+      }
+    });
+
+    // 5. Hide menu initially on startup
+    var menu = document.querySelector("#app");
+    if (menu) {
+      menu.style.display = "none";
+      setWindowTouch(false);
+    }
+  } else {
+    // Standard web browser fallback: make sure it is visible
+    var menu = document.querySelector("#app");
+    if (menu) menu.style.display = "block";
+  }
 
 }); // end DOMContentLoaded
 </script>
