@@ -14,6 +14,24 @@ function translate(text) {
     if (!text) return text;
     return translationMap[text] || text;
 }
+
+// Mock H5GG APIs for compatibility with Chrome / Safari / Normal Browsers
+if (typeof setButtonImage === 'undefined') { window.setButtonImage = function() {}; }
+if (typeof setWindowDrag === 'undefined') { window.setWindowDrag = function() {}; }
+if (typeof setWindowRect === 'undefined') { window.setWindowRect = function() {}; }
+if (typeof setWindowTouch === 'undefined') { window.setWindowTouch = function() {}; }
+if (typeof setButtonAction === 'undefined') { window.setButtonAction = function() {}; }
+if (typeof h5gg === 'undefined') {
+    window.h5gg = {
+        getRangesList: function() { return 0; },
+        getRanges: function() { return []; },
+        searchNumber: function() {},
+        searchNearby: function() {},
+        getValue: function() { return 0; },
+        setValue: function() {},
+        clear: function() {}
+    };
+}
 </script>
 
 

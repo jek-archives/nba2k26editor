@@ -497,6 +497,7 @@ else:
 
 # ----------------- INJECT RUNTIME TRANSLATION MAP AND METHODS -----------------
 # We will inject the TR_MAP and translate function inside the <head> block, and run translation hooks on loaded data files.
+# Also inject Chrome compatibility helper stubs for H5GG APIs to prevent crash in normal browsers.
 translation_script = """
 <script>
 // Runtime Translation Helper
@@ -504,6 +505,24 @@ var translationMap = """ + str(TR_MAP) + """;
 function translate(text) {
     if (!text) return text;
     return translationMap[text] || text;
+}
+
+// Mock H5GG APIs for compatibility with Chrome / Safari / Normal Browsers
+if (typeof setButtonImage === 'undefined') { window.setButtonImage = function() {}; }
+if (typeof setWindowDrag === 'undefined') { window.setWindowDrag = function() {}; }
+if (typeof setWindowRect === 'undefined') { window.setWindowRect = function() {}; }
+if (typeof setWindowTouch === 'undefined') { window.setWindowTouch = function() {}; }
+if (typeof setButtonAction === 'undefined') { window.setButtonAction = function() {}; }
+if (typeof h5gg === 'undefined') {
+    window.h5gg = {
+        getRangesList: function() { return 0; },
+        getRanges: function() { return []; },
+        searchNumber: function() {},
+        searchNearby: function() {},
+        getValue: function() { return 0; },
+        setValue: function() {},
+        clear: function() {}
+    };
 }
 </script>
 """
